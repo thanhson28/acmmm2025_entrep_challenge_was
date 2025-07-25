@@ -1,0 +1,8 @@
+pillow
+torch
+timm
+scikit-learn
+numpy
+albumentations
+opencv-python
+
