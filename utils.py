@@ -16,7 +16,6 @@ import pickle
 from collections import defaultdict
 import uuid
 from sklearn.model_selection import StratifiedShuffleSplit
-import timm
 from tqdm import tqdm
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from model_setting import model_settings
@@ -143,7 +142,7 @@ class MedicalImageDataset(Dataset):
         if self.transform:
             augmented = self.transform(image=image)
             image = augmented["image"]
-        
+
         #flip left and right and change label
         if self.type == 'train' and np.random.rand() < 0.5:
             # print("type image", image.shape)
@@ -201,7 +200,6 @@ def log_transforms(composed_transform):
     for transform in composed_transform.transforms:
         # Get transform name and parameters
         transform_name = transform.__class__.__name__
-        params = transform.get_params() if hasattr(transform, 'get_params') else {}
         param_str = ", ".join([f"{k}={v}" for k, v in transform.__dict__.items() if not k.startswith('_')])
         log_lines.append(f"- {transform_name}: {param_str}")
     return "\n".join(log_lines)
@@ -245,8 +243,6 @@ def select_last_trainable_parameters(model, model_name, target_params):
                 keep_params = last_tensor.numel() - excess_params
                 flat_tensor[keep_params:] = 0  # Zero out excess parameters
                 last_tensor.requires_grad = False
-                # Create a new trainable tensor with exact number needed
-                new_trainable = flat_tensor[:keep_params].detach().requires_grad_(True)
                 trainable_params = target_params
                 frozen_params = total_params - trainable_params
 
@@ -417,7 +413,6 @@ def train(process_folder = None,
         if not os.path.exists(process_folder):
             os.makedirs(process_folder, exist_ok=True)
     model_performance = []
-    num_classes = 7 
 
     # Train each model
     for config in model_configs:
@@ -433,7 +428,7 @@ def train(process_folder = None,
         with_generatedata,\
         misclassification_data = load_data_fn(
             model, config["name"],
-            process_folder=process_folder, 
+            process_folder=process_folder,
             json_paths=data_json_paths,
             batch_size=batch_size,
             img_dirs=img_dirs,
@@ -498,7 +493,7 @@ def train(process_folder = None,
         print(
             f"{i}. Model: {info['name']}, Paper: {info['paper']}, Accuracy: {info['accuracy']:.2f}%, Frozen Params: {info['frozen_params']}, Trainable Params: {info['trainable_params']}, Path: {info['model_path']}"
         )
-    
+
     with open(f"{process_folder}/label_encoder.pkl", "wb") as f:
         pickle.dump(train_dataset.label_encoder, f)
 
@@ -561,7 +556,6 @@ def val(models = [], img_dirs = [], json_paths = []):
     # Load label encoder
     with open("label_encoder.pkl", "rb") as f:
         label_encoder = pickle.load(f)
-    test_images = []
     val_output = {}
     # real_data_path = "/raid/hvtham/son/data/ent/data.json"
     real_data = []
@@ -634,8 +628,6 @@ def assemble(models = [], csv_path = None, images_path = None):
     with open(csv_path, "r") as f:
         test_images_name = f.readlines()
     test_images_name = [line.strip() for line in test_images_name if line.strip() != ""]
-    test_images = []
-    val_output = {}
     loaded_models_dict = [
         (timm.create_model(
             model_info["name"], pretrained=False, num_classes=7
