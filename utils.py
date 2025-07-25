@@ -179,8 +179,8 @@ class MedicalImageDataset(Dataset):
                         scale=(0.8, 1.2), translate_percent=(0.1, 0.1), rotate=0, shear=10, p=0.5
                     ),
                     A.CoarseDropout(max_holes=8, max_height=8, max_width=8, p=0.2),
-                    # A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                    A.Normalize(mean=[0.0, 0.0, 0.0], std=[1.0, 1.0, 1.0]),
+                    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                    # A.Normalize(mean=[0.0, 0.0, 0.0], std=[1.0, 1.0, 1.0]),
                     ToTensorV2(),
                 ]
             )
